@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 512 512">
+  <!-- Mix Snapshots icon (JOHANZE), in the style of UA's Add On icons: dark panel, one flat
+       glyph. Two snapshot cards of a mixer, A in front (teal fader caps) and B behind (gold),
+       with the faders in different places: two mixes to flip between.
+       Render: sh ../../ableton-to-luna/images/render.sh icon.svg icon.png -->
+  <defs>
+    <linearGradient id="panel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2C2D30"/><stop offset="1" stop-color="#17181A"/></linearGradient>
+    <linearGradient id="teal" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6FDCCD"/><stop offset="1" stop-color="#2FAE9D"/></linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2CE6A"/><stop offset="1" stop-color="#D9A52E"/></linearGradient>
+  </defs>
+  <rect x="0" y="0" width="512" height="512" fill="#0D0E0F"/>
+  <rect x="4" y="4" width="504" height="504" fill="url(#panel)"/>
+  <rect x="4" y="4" width="504" height="4" fill="#ffffff" opacity="0.08"/>
+
+  <!-- B: the card behind -->
+  <rect x="150" y="70" width="290" height="290" rx="22" fill="url(#gold)"/>
+  <rect x="397" y="106" width="12" height="226" rx="6" fill="#2C2D30" opacity="0.5"/>
+  <rect x="379" y="150" width="48" height="26" rx="7" fill="#2C2D30"/>
+  <rect x="385" y="161" width="36" height="4" rx="2" fill="#ffffff" opacity="0.35"/>
+
+  <!-- A: the card in front -->
+  <rect x="72" y="142" width="290" height="300" rx="22" fill="#E8E9EB"/>
+  <!-- fader slots -->
+  <g fill="#2C2D30">
+    <rect x="112" y="178" width="12" height="228" rx="6"/>
+    <rect x="170" y="178" width="12" height="228" rx="6"/>
+    <rect x="228" y="178" width="12" height="228" rx="6"/>
+    <rect x="286" y="178" width="12" height="228" rx="6"/>
+  </g>
+  <!-- fader caps -->
+  <g fill="url(#teal)">
+    <rect x="94" y="300" width="48" height="26" rx="7"/>
+    <rect x="152" y="236" width="48" height="26" rx="7"/>
+    <rect x="210" y="330" width="48" height="26" rx="7"/>
+    <rect x="268" y="262" width="48" height="26" rx="7"/>
+  </g>
+  <g fill="#ffffff" opacity="0.55">
+    <rect x="100" y="311" width="36" height="4" rx="2"/>
+    <rect x="158" y="247" width="36" height="4" rx="2"/>
+    <rect x="216" y="341" width="36" height="4" rx="2"/>
+    <rect x="274" y="273" width="36" height="4" rx="2"/>
+  </g>
+</svg>
