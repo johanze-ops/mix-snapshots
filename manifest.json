@@ -2,7 +2,7 @@
     "package_name": "Mix Snapshots",
     "id": "com.ranrun.mix_snapshots",
     "title": "Mix Snapshots",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "manufacturer": "JOHANZE",
     "description": "Save your whole mix (faders, pans, mutes, sends, plug-in settings and their automation) as snapshots, then recall or A/B them, all or in part, as one undo step.",
     "categories": [

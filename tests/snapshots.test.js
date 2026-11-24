@@ -106,6 +106,23 @@ describe('capture and recall', () => {
     expect(vocal.c).toHaveProperty('mute');
   });
 
+  it("recalls the master's automation mode, not only the tracks'", async () => {
+    // SDK 3.1.2 Update 1 moved setAutomationMode from Track to Channel, so buses and the
+    // master take it too (before, recall skipped them).
+    const { engine, session } = await connected();
+    const master = session.master;
+    await master.setAutomationMode('touch');
+    await engine.settled();
+    const { data: saved } = await M.capture(session, { name: 'Mine' });
+    expect(saved.channels[master.id].mode).toBe('touch');
+
+    await master.setAutomationMode('latch');
+    await engine.settled();
+    await M.recall(session, saved, ALL);
+    await engine.settled();
+    expect(master.automationMode.value).toBe('touch');
+  });
+
   it('recalls levels, mutes and an automation lane as one undo step', async () => {
     const { engine, session } = await connected();
     const vocal = track(session, 'Vocal');
