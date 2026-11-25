@@ -2,7 +2,7 @@
 // recalls and A/B-flips them through MixLogic. The recall ticks are kept for all sessions in
 // this page's localStorage; the A/B assignment is kept in the session (session storage).
 
-const BUILD = 'b3';
+const BUILD = 'b4';
 const $ = (id) => document.getElementById(id);
 const SCOPE_KEY = `${MixLogic.CONTEXT}.scope`;
 const UI_RECORD = 'ui';

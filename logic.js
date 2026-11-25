@@ -194,11 +194,45 @@ const MixLogic = {
     return plan.writes.length + plan.lanes.length + plan.modes.length;
   },
 
-  /** Carry out a plan as one undo step named `name`. */
+  /**
+   * Runs `fn` with no tracks selected, then selects the same tracks again (also when `fn` fails).
+   * LUNA's selection grouping applies a change on one of several selected tracks to all of them,
+   * SDK writes included (measured 2026-11-25, LUNA 3.1.2: a fader write on one of two selected
+   * tracks moved both; playlist copies and renames spread the same way). Selection writes aren't
+   * undo steps.
+   */
+  async withoutSelection(session, fn) {
+    const c = session.context;
+    const selected = Array.isArray(c?.selectionTracks?.value) ? [...c.selectionTracks.value] : [];
+    if (!selected.length) return fn();
+    const saved = c.snapshot();
+    await c.select({ trackUids: [], playlistUids: [] });
+    try {
+      return await fn();
+    } finally {
+      // The same selection, naming the playlists the tracks play now: `fn` may have switched
+      // them, and a selection naming a playlist its track no longer plays makes LUNA assert.
+      const { ids, playlists } = await MixLogic.playing(session, selected);
+      await c.restore({ ...saved, selection_tracks: ids, selection_playlists: playlists }).catch(() => {});
+    }
+  },
+
+  /**
+   * The tracks of `ids` that still exist, and the playlist each plays, read from LUNA. The SDK's
+   * own copy lags inside a batch transaction (LUNA holds its pushes until the commit).
+   */
+  async playing(session, ids) {
+    const tracks = ids.map((id) => session.tracks.items.find((t) => t.id === id)).filter(Boolean);
+    await Promise.all(tracks.map((t) => t.reload({ propfilter: ['playlist_uid'], children: false, commands: false }).catch(() => {})));
+    const live = tracks.filter((t) => t.playlistUid?.value);
+    return { ids: live.map((t) => t.id), playlists: live.map((t) => t.playlistUid.value) };
+  },
+
+  /** Carry out a plan as one undo step named `name`, with no tracks selected (see withoutSelection). */
   async apply(session, plan, handles, { name = 'Recall mix snapshot' } = {}) {
     if (!MixLogic.size(plan)) return;
     const entry = (ch, key) => handles.get(ch)?.entries.get(key);
-    await session.transaction(name, async () => {
+    await MixLogic.withoutSelection(session, () => session.transaction(name, async () => {
       // Lanes first: a value written under a lane in Read would be read straight back from it.
       for (const l of plan.lanes) {
         const ctl = entry(l.ch, l.key)?.control;
@@ -217,7 +251,7 @@ const MixLogic = {
         const ch = handles.get(m.ch)?.ch;
         if (typeof ch?.setAutomationMode === 'function') await ch.setAutomationMode(m.mode);
       }
-    });
+    }));
   },
 
   /** Capture, plan and apply in one go. Returns the plan (with `missing`). */

@@ -19,6 +19,10 @@ flips between two. Each recall is one undo step.
 - **A/B flip:** reads the session's `undo_uid` with `luna.raw.get` (propfilter) after a flip;
   on the next flip, if it's unchanged (nothing else happened), it `undo(1)`s its own recall
   before recalling the other side, so flipping doesn't fill the undo list.
+- **Selection:** LUNA applies a change on one of several selected tracks to all of them, SDK
+  writes included, so a recall runs with no tracks selected: `context.snapshot()`,
+  `context.select()` with no tracks, the recall, then `context.restore()` (tracks' playlists
+  re-read with `reload()`). No undo entry.
 - **Storage:** session storage context `com.ranrun.mix_snapshots`: one record per snapshot,
   one field per channel plus a `meta` field written last; writes are not undoable. The
   recall ticks are in the page's `localStorage`, keyed by the Add On id.

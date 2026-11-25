@@ -196,3 +196,63 @@ describe('storage', () => {
     expect(await M.list(session)).toEqual([]);
   });
 });
+
+// LUNA's selection grouping: a write to one of several selected tracks moves the others too
+// (measured 2026-11-25: an SDK fader write on one of two selected tracks moved both). Recall
+// runs with no tracks selected, and the selection comes back afterwards.
+describe('selection', () => {
+  const ids = (session, ...names) => names.map((n) => track(session, n).id);
+
+  it('recalls with no tracks selected, then selects them again', async () => {
+    const { engine, session } = await connected();
+    const c = session.context;
+    const vocal = track(session, 'Vocal');
+    await vocal.loadStrip();
+    const { data: saved } = await M.capture(session, { name: 'Mine' });
+    await vocal.gain.real.set(-20);
+    const sel = ids(session, 'Vocal', 'Bass');
+    await session.selectTimeline({ tracks: sel, startTick: 0, stopTick: Luna.WHOLE_NOTE });
+    await engine.settled();
+    const seen = [];
+    const set = vocal.gain.normalized.set.bind(vocal.gain.normalized);
+    vocal.gain.normalized.set = async (v) => { seen.push([...(c.selectionTracks.value ?? [])]); return set(v); };
+    await M.recall(session, saved, ALL);
+    await engine.settled();
+    expect(seen).toEqual([[]]);
+    expect(c.selectionTracks.value).toEqual(sel);
+    expect(c.selectionPlaylists.value).toEqual(sel.map((id) => session.tracks.items.find((t) => t.id === id).playlistUid.value));
+    expect([c.selectionStart.value, c.selectionStop.value]).toEqual([0, Luna.WHOLE_NOTE]);
+  });
+
+  it('selects them again with the playlists they play now, not the SDK’s stale copy', async () => {
+    // Inside a batch LUNA holds its pushes, so after a playlist switch the SDK still names the
+    // old playlist; a selection naming a playlist the track no longer plays makes LUNA assert
+    // (SortPlaylistUIDs, measured 2026-11-25). Here the mock's node changes with no push.
+    const { engine, session } = await connected();
+    const c = session.context;
+    const [vocal, bass] = [track(session, 'Vocal'), track(session, 'Bass')];
+    await session.selectTimeline({ tracks: [vocal, bass], startTick: 0, stopTick: Luna.WHOLE_NOTE });
+    await engine.settled();
+    const bassPl = bass.playlistUid.value;
+    await M.withoutSelection(session, async () => { engine.nodes.get(vocal.path).properties.set('playlist_uid', 'pl_Vocal_2'); });
+    await engine.settled();
+    expect(c.selectionTracks.value).toEqual([vocal.id, bass.id]);
+    expect(c.selectionPlaylists.value).toEqual(['pl_Vocal_2', bassPl]);
+    expect([c.selectionStart.value, c.selectionStop.value]).toEqual([0, Luna.WHOLE_NOTE]);
+  });
+
+  it('selects them again when the work fails, and leaves an empty selection alone', async () => {
+    const { engine, session } = await connected();
+    const c = session.context;
+    const sel = ids(session, 'Bass', 'Drums');
+    await session.selectTimeline({ tracks: sel });
+    await engine.settled();
+    await expect(M.withoutSelection(session, async () => { throw new Error('refused'); })).rejects.toThrow('refused');
+    await engine.settled();
+    expect(c.selectionTracks.value).toEqual(sel);
+    await c.selectionTracks.set([]);
+    await engine.settled();
+    expect(await M.withoutSelection(session, async () => 5)).toBe(5);
+    expect(c.selectionTracks.value ?? []).toEqual([]);
+  });
+});
