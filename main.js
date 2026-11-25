@@ -65,7 +65,7 @@ function report(plan, name) {
   if (plan.lanes.length) parts.push(`${plan.lanes.length} automation lane${plan.lanes.length === 1 ? '' : 's'}`);
   if (plan.modes.length) parts.push(`${plan.modes.length} automation mode${plan.modes.length === 1 ? '' : 's'}`);
   let text = n ? `Recalled “${name}”: ${parts.join(', ')} (one undo).` : `“${name}”: the mix already matches.`;
-  if (plan.missing.length) text += ` Not found: ${plan.missing.join(', ')}.`;
+  if (plan.missing.length) text += ` Not found: ${plan.missing.map((m) => (m.kind === 'plugin' ? `a plug-in on “${m.track}”` : `track “${m.name}”`)).join(', ')}.`;
   message(text, plan.missing.length ? 'warn' : 'ok');
 }
 

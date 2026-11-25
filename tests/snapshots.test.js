@@ -82,7 +82,7 @@ describe('plan', () => {
     const now = mix(ch('new', 'Vocal', { gain: 0 }));
     const p = M.plan(snap, now, ALL);
     expect(p.writes).toEqual([{ ch: 'new', key: 'gain', value: -6 }]);
-    expect(p.missing).toEqual(['track “Gone”']);
+    expect(p.missing).toEqual([{ kind: 'track', name: 'Gone' }]);
   });
 
   it('skips a plug-in that was swapped, and says so', () => {
@@ -90,7 +90,7 @@ describe('plan', () => {
     const now = mix(ch('t1', 'Vocal', { gain: 0, 'fx.effect_0.Ratio': 2 }, { fx: { effect_0: 'eq' } }));
     const p = M.plan(snap, now, ALL);
     expect(p.writes.map((w) => w.key)).toEqual(['gain']);
-    expect(p.missing).toEqual(['a plug-in on “Vocal”']);
+    expect(p.missing).toEqual([{ kind: 'plugin', track: 'Vocal' }]);
   });
 });
 

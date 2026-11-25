@@ -162,11 +162,11 @@ const MixLogic = {
     const missing = [];
     for (const saved of Object.values(snap.channels)) {
       const now = MixLogic.match(current, saved);
-      if (!now) { missing.push(`track “${saved.name}”`); continue; }
+      if (!now) { missing.push({ kind: 'track', name: saved.name }); continue; }
       const goneSlots = new Set();
       if (scope.plugins) {
         for (const [slot, pluginId] of Object.entries(saved.fx ?? {})) {
-          if (now.fx?.[slot] !== pluginId) { goneSlots.add(slot); missing.push(`a plug-in on “${saved.name}”`); }
+          if (now.fx?.[slot] !== pluginId) { goneSlots.add(slot); missing.push({ kind: 'plugin', track: saved.name }); }
         }
       }
       for (const [key, value] of Object.entries(saved.c)) {
@@ -186,7 +186,12 @@ const MixLogic = {
       }
       if (scope.automation && saved.mode && now.mode && saved.mode !== now.mode) modes.push({ ch: now.id, mode: saved.mode });
     }
-    return { writes, lanes, modes, missing: [...new Set(missing)] };
+    return { writes, lanes, modes, missing: MixLogic.unique(missing) };
+  },
+
+  /** Items without repeats ({kind: 'track', name} and the like, compared by content). */
+  unique(items) {
+    return [...new Map(items.map((x) => [JSON.stringify(x), x])).values()];
   },
 
   /** How many things a plan changes. */

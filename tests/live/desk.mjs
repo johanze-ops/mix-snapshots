@@ -48,7 +48,7 @@ await s.selectTimeline({ tracks: sel }); await pause(300);
 const u0 = await undoId();
 t = Date.now();
 const plan = await M.recall(s, mine, ALL, { name: 'Recall “My mix”' });
-console.log(`recall: ${plan.writes.length} values, ${plan.lanes.length} lanes, ${plan.modes.length} modes in ${Date.now() - t} ms; missing: ${plan.missing.join(', ') || 'none'}`);
+console.log(`recall: ${plan.writes.length} values, ${plan.lanes.length} lanes, ${plan.modes.length} modes in ${Date.now() - t} ms; missing: ${plan.missing.map((m) => JSON.stringify(m)).join(', ') || 'none'}`);
 await pause(600);
 const { data: after } = await M.capture(s);
 const left = M.plan(mine, after, ALL);
